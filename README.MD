@@ -1,88 +1,206 @@
+﻿
 # CodeSentinel AI
 
-**Architecture-Agnostic Security, Code Quality & Completeness Auditing Agent**
+**Architecture-Agnostic Repository Security, Code Quality & Completeness Auditor**
 
-CodeSentinel AI is an AI-assisted developer security and code-quality auditing project developed for the Mycrobo Hackathon (17–18 November 2026).
+CodeSentinel AI is a read-only repository auditing tool developed for the Mycrobo Hackathon (17–18 November 2026). It analyzes software repositories to identify potentially unsafe coding patterns, incomplete implementations, code-quality issues, and development gaps.
 
-The project aims to identify security vulnerabilities, code slop, incomplete implementations, coding gaps, and technical debt across software repositories, regardless of their underlying architecture.
+It combines repository intelligence, heuristic static analysis, a unified audit engine, and a LangGraph-based workflow to prioritize findings and generate remediation recommendations.
 
-> **Development status:** Work in progress. Repository analysis and an initial heuristic security scanner are implemented. AI reasoning, advanced scanning, API integration, and the frontend are planned.
+> **Current status:** Core scanning, audit orchestration, agent workflow, and JSON/Markdown reporting are implemented and tested. FastAPI integration, the React dashboard, and LLM-powered reasoning are not yet implemented.
 
-## Problem Statement
+## 1. Problem Statement
 
-Modern software projects often contain security vulnerabilities, inconsistent coding practices, incomplete features, and technical debt. These problems become harder to identify as repositories grow and incorporate multiple languages and frameworks.
+Software repositories can accumulate security weaknesses, unfinished implementations, inconsistent coding practices, and technical debt. These issues become harder to identify across projects that use different languages, frameworks, and architectures.
 
-CodeSentinel AI aims to provide a unified auditing workflow that helps developers identify and prioritize these issues.
+CodeSentinel AI aims to provide a unified auditing workflow that helps developers discover, understand, and prioritize these issues without executing the target repository's code.
 
-## Planned Capabilities
+## 2. Key Features
 
-- **Repository Intelligence:** Discover source files, programming languages, and frameworks.
-- **Security Analysis:** Detect potentially unsafe coding patterns and security vulnerabilities.
-- **Code Slop Detection:** Identify duplicated, unnecessarily complex, and low-quality code.
-- **Coding Gap Detection:** Identify TODOs, placeholders, incomplete implementations, and missing safeguards.
-- **AI Reasoning:** Analyze and prioritize findings using an LLM-powered agent.
-- **Audit Dashboard:** Present actionable findings and repository health metrics.
+### Repository Intelligence
+- Detects programming languages using file extensions.
+- Identifies selected frameworks and dependency manifests.
+- Counts files, directories, and repository size.
+- Excludes common generated, dependency, and environment directories.
+- Produces structured repository metadata.
 
-## Technology Stack
+### Security Analysis
 
-| Component | Technology |
-|---|---|
-| Backend | Python, FastAPI |
-| Agent orchestration | LangGraph |
-| AI integration | Google GenAI (planned) |
-| Frontend | React + Vite (planned) |
-| Initial scanning | Python regex-based heuristics |
-| Advanced scanning | Semgrep, Gitleaks (planned) |
+The heuristic security scanner currently implements eight rules:
 
-## Current Implementation
+| Rule | Detection | Severity |
+|---|---|---|
+| SEC001 | Possible hardcoded credentials | HIGH |
+| SEC002 | Possible SQL injection | HIGH |
+| SEC003 | Unsafe dynamic evaluation | HIGH |
+| SEC004 | Potential command injection | HIGH |
+| SEC005 | Weak cryptographic hashing | MEDIUM |
+| SEC006 | Unsafe deserialization | HIGH |
+| SEC007 | Debug mode enabled | LOW |
+| SEC008 | Potentially unsafe CORS configuration | MEDIUM |
 
-### 1. Repository Intelligence Engine
+Credential-like evidence is redacted in reported findings.
 
-File: `backend/app/analyzers/project_detector.py`
-
-Implemented capabilities:
-
-- Detect programming languages using file extensions.
-- Identify selected frameworks from root-level dependency manifests.
-- Count files and directories.
-- Identify important configuration files.
-- Exclude common generated and dependency directories.
-- Produce structured JSON output.
-
-### 2. Security Scanner
-
-File: `backend/app/scanners/security_scanner.py`
-
-Current heuristic checks:
+### Code Quality and Completeness Analysis
 
 | Rule | Detection |
 |---|---|
-| SEC001 | Possible hardcoded credentials |
-| SEC002 | Possible SQL injection |
-| SEC003 | Unsafe dynamic evaluation |
-| SEC004 | Potential command injection |
-| SEC005 | Weak cryptographic hashing |
-| SEC006 | Unsafe deserialization |
-| SEC007 | Debug mode enabled |
-| SEC008 | Potentially unsafe CORS configuration |
+| CG001 | TODO, FIXME, XXX, and HACK markers |
+| CG002 | Explicit NotImplementedError |
+| CG003 | Possible empty implementations |
+| CG004 | No recognizable test files found |
 
-**Important:** Findings are heuristic indicators requiring review, not confirmed vulnerabilities.
+Python structural checks use AST analysis. Other supported languages primarily use pattern-based detection.
 
-## Local Setup
+### Unified Audit Engine
+- Coordinates repository analysis and both scanners.
+- Normalizes findings into a consolidated report.
+- Preserves source, category, severity, location, and evidence.
+- Calculates severity summaries.
+- Maintains read-only analysis.
+
+### LangGraph Audit Agent
+
+The current deterministic LangGraph workflow:
+1. Assigns priorities to findings.
+2. Generates rule-specific remediation guidance.
+3. Groups recommendations by rule.
+4. Identifies affected file locations.
+5. Generates an executive summary.
+
+Priority mapping:
+
+| Severity | Priority |
+|---|---|
+| CRITICAL | P0 |
+| HIGH | P1 |
+| MEDIUM | P2 |
+| LOW | P3 |
+| INFO | P4 |
+
+**AI integration status:** The current workflow uses deterministic logic and predefined remediation guidance. LLM-powered reasoning is a future enhancement.
+
+### Report Generation
+- Exports consolidated reports as JSON.
+- Exports readable Markdown reports.
+- Includes repository metadata, scanner findings, severity summaries, agent priorities, and recommendations.
+- Supports exporting selected formats.
+
+## 3. Architecture
+
+```text
+                 Target Repository
+                         |
+                         v
+               Repository Intelligence
+                         |
+             +-----------+-----------+
+             |                       |
+             v                       v
+       Security Scanner       Code Quality Scanner
+             |                       |
+             +-----------+-----------+
+                         |
+                         v
+                 Unified Audit Engine
+                         |
+                         v
+                  Normalized Report
+                         |
+                         v
+                  LangGraph Agent
+                         |
+             +-----------+-----------+
+             |           |           |
+             v           v           v
+          Priority   Recommendations  Summary
+             |           |           |
+             +-----------+-----------+
+                         |
+                         v
+                  Report Exporter
+                         |
+                 +-------+-------+
+                 |               |
+                 v               v
+                JSON          Markdown
+```
+
+## 4. Technology Stack
+
+| Component | Technology |
+|---|---|
+| Language | Python 3.12 |
+| API framework | FastAPI (installed; integration pending) |
+| Agent orchestration | LangGraph |
+| Structural analysis | Python AST |
+| Pattern analysis | Python regular expressions |
+| Data representation | Python dictionaries and JSON |
+| Report generation | JSON and Markdown |
+| Frontend | React + Vite (planned) |
+| LLM integration | Google GenAI (planned) |
+
+## 5. Project Structure
+
+```text
+codesentinel-ai/
+|
+|-- backend/
+|   |-- app/
+|   |   |-- analyzers/
+|   |   |   |-- project_detector.py
+|   |   |
+|   |   |-- scanners/
+|   |   |   |-- security_scanner.py
+|   |   |   |-- code_quality_scanner.py
+|   |   |
+|   |   |-- services/
+|   |   |   |-- audit_service.py
+|   |   |   |-- report_exporter.py
+|   |   |
+|   |   |-- agents/
+|   |       |-- audit_agent.py
+|   |
+|   |-- tests/
+|   |   |-- sample_vulnerable.py
+|   |   |-- test_security_scanner.py
+|   |   |-- test_code_quality_scanner.py
+|   |   |-- test_audit_service.py
+|   |   |-- test_report_exporter.py
+|   |   |-- test_audit_agent.py
+|   |
+|   |-- requirements.txt
+|
+|-- docs/
+|   |-- architecture.md
+|   |-- IMPLEMENTATION_STATUS.md
+|   |-- ai-transcripts/
+|       |-- 01_development_sessions.md
+|
+|-- reports/
+|-- .gitignore
+|-- README.MD
+|-- AI_LOG.MD
+```
+
+## 6. Local Setup
 
 ### Prerequisites
-
 - Python 3.12 or compatible version
 - Git
-- Node.js for the planned frontend
+- Windows, macOS, or Linux
 
 ### Backend setup (Windows PowerShell)
 
 ```powershell
+git clone https://github.com/likhitha58/codesentinel-ai.git
+cd codesentinel-ai
 cd backend
+
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install fastapi uvicorn pydantic python-dotenv langgraph
+
+python -m pip install -r requirements.txt
 ```
 
 ### Run repository analysis
@@ -99,124 +217,109 @@ python -m app.analyzers.project_detector ..
 python -m app.scanners.security_scanner ..
 ```
 
-The scanner inspects repository source files without executing the target code.
+### Run automated tests
 
-## Validation Results
-
-Initial manual validation was performed using `backend/tests/sample_vulnerable.py`.
-
-- Source files scanned: 5
-- Findings detected: 6
-- High severity: 4
-- Medium severity: 1
-- Low severity: 1
-- Hardcoded credential evidence was redacted.
-
-### Known Limitation
-
-The SQL injection test was not detected because the initial scanner uses line-by-line regular expressions and the sample query spans multiple lines.
-
-Additional false-positive testing, automated regression tests, and stronger static analysis are required.
-
-## Planned Architecture
-
-```text
-Repository Input
-       |
-Repository Intelligence
-       |
-Security & Quality Scanners
-       |
-Finding Normalization
-       |
-AI Reasoning Agent
-       |
-Prioritized Audit Report
-       |
-Dashboard / CLI
+```powershell
+python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-## Development Roadmap
+### Run a unified audit with the agent
 
-- [x] Initialize project structure.
-- [x] Implement repository intelligence engine.
-- [x] Implement initial security scanner.
-- [x] Perform initial manual security scanning validation.
-- [ ] Fix missed SQL injection test.
-- [ ] Add automated regression tests.
-- [ ] Build code-quality and completeness analyzers.
-- [ ] Integrate advanced security scanning.
-- [ ] Implement LangGraph reasoning workflow.
-- [ ] Integrate Gemini.
-- [ ] Build FastAPI endpoints.
-- [ ] Build React dashboard.
-- [ ] Complete end-to-end testing and demonstration.
+```powershell
+python -c "from app.services.audit_service import build_audit_report; from app.agents.audit_agent import run_audit_agent; report=build_audit_report('..'); enhanced=run_audit_agent(report); print(enhanced['agent_analysis']['executive_summary'])"
+```
 
-## Security Considerations
+### Export JSON and Markdown reports
 
-CodeSentinel is intended to analyze untrusted source code without executing it. Future repository ingestion and external scanner integrations must enforce resource limits, safe path handling, and isolated execution where appropriate.
+```powershell
+python -c "from app.services.audit_service import build_audit_report; from app.agents.audit_agent import run_audit_agent; from app.services.report_exporter import export_audit_report; report=build_audit_report('..'); enhanced=run_audit_agent(report); print(export_audit_report(enhanced, output_dir='../reports'))"
+```
 
-Never commit API keys, credentials, or real secrets.
+Generated reports are stored in the root `reports/` directory.
 
-## AI Development Transparency
+## 7. Validation Results
 
-AI-assisted planning, implementation, debugging, and validation are documented in `AI_LOG.md`.
+Latest verified automated test run:
 
-Supporting development session records are maintained in `docs/ai-transcripts/`.
+**28 tests passed.**
 
-## Hackathon
+| Test area | Tests |
+|---|---:|
+| Security scanner | 5 |
+| Code-quality scanner | 8 |
+| Unified audit service | 5 |
+| Report exporter | 5 |
+| LangGraph agent | 5 |
+| **Total** | **28** |
 
-**Event:** Mycrobo Hackathon  
-**Dates:** 17–18 November 2026  
-**Submission:** Public GitHub repository link
+The deliberately vulnerable fixture produced seven known security indicators:
 
+- HIGH: 5
+- MEDIUM: 1
+- LOW: 1
 
-## Implementation Progress — 18 November 2026
+The code-quality scanner produced zero findings in the fixture repository during the reported validation.
 
-### Phase 1: Repository Intelligence and Security Analysis
+JSON and Markdown report generation, including agent analysis, was also verified.
 
-Implemented:
-- Repository structure and language detection.
-- Framework and dependency-file identification.
-- Read-only repository scanning.
-- Seven heuristic security rules:
-  - SEC001: Possible hardcoded credentials.
-  - SEC002: Possible SQL injection, including multiline patterns.
-  - SEC003: Unsafe dynamic evaluation.
-  - SEC004: Potential command injection.
-  - SEC005: Weak cryptographic hashes.
-  - SEC006: Unsafe deserialization.
-  - SEC007: Debug mode enabled.
-- Credential evidence redaction.
+The fixture is used only as scanner input. Its intentionally vulnerable code must never be executed.
 
-### Phase 2: Code Quality and Coding-Gap Analysis
+## 8. Limitations
 
-Implemented:
-- CG001: Unresolved work markers (TODO, FIXME, XXX, HACK).
-- CG002: Explicit NotImplementedError detection.
-- CG003: Possible empty implementations.
-- CG004: No recognizable test files found.
-- Python AST-based detection for unimplemented functionality and pass statements.
-- Exclusion of intentional pass statements inside exception handlers.
-
-### Validation Results
-
-- Security scanner: 7 known patterns detected in the intentionally vulnerable test fixture.
-- Code-quality scanner: 0 findings in the current project.
-- Automated tests: 13 passed.
-- Python compilation checks: successful.
-
-The vulnerable fixture is used only as scanner input. Its code is not executed.
-
-### Current Limitations
-
-- Security and code-quality findings are heuristic indicators, not confirmed vulnerabilities or defects.
+- Findings are heuristic indicators, not confirmed vulnerabilities or defects.
+- Manual validation is required before treating a finding as a real issue.
 - Python AST analysis is currently limited to Python files.
-- Other supported languages rely on pattern-based detection.
-- The security and code-quality scanners have not yet been integrated into a unified audit engine.
-- AI-powered analysis and report generation are planned, not yet implemented.
+- Other supported languages primarily use pattern-based analysis.
+- Framework detection currently checks selected root-level manifests.
+- Missing-test detection relies on recognizable test naming conventions.
+- The current LangGraph agent uses deterministic rules, not an LLM.
+- FastAPI routes and the React dashboard are not yet implemented.
+- Advanced tools such as Semgrep, Gitleaks, and OSV-Scanner are not yet integrated.
 
+## 9. Development Roadmap
 
-## License
+- [x] Initialize repository and development environment.
+- [x] Implement repository intelligence.
+- [x] Implement heuristic security scanner.
+- [x] Add multiline SQL injection detection.
+- [x] Implement code-quality and coding-gap analysis.
+- [x] Add automated regression tests.
+- [x] Build unified audit service.
+- [x] Export JSON and Markdown reports.
+- [x] Implement LangGraph audit workflow.
+- [x] Add finding prioritization and remediation recommendations.
+- [x] Include agent analysis in Markdown reports.
+- [ ] Build FastAPI endpoints.
+- [ ] Build React + Vite dashboard.
+- [ ] Add LLM-powered reasoning.
+- [ ] Integrate advanced security analysis tools.
+- [ ] Perform end-to-end testing and prepare demonstration.
 
-License to be selected before public release.
+## 10. Security Considerations
+
+CodeSentinel AI is designed to inspect repositories without executing their source code.
+
+Before exposing the service to external users, additional safeguards are required:
+- Restrict repository paths to approved directories.
+- Enforce file-size and resource limits.
+- Protect against path traversal and symbolic-link issues.
+- Isolate any future external scanner execution.
+- Avoid exposing server filesystem paths.
+- Never commit API keys, credentials, or real secrets.
+
+## 11. AI Development Transparency
+
+AI assistance was used for project planning, implementation guidance, debugging, test design, and documentation.
+
+The developer executed commands, reviewed generated code, applied changes, and verified implementation results.
+
+Detailed development records are maintained in:
+- `AI_LOG.MD`
+- `docs/ai-transcripts/01_development_sessions.md`
+
+## 12. Hackathon
+
+**Event:** Mycrobo Hackathon
+**Dates:** 17–18 November 2026
+**Project:** CodeSentinel AI
+**Repository:** https://github.com/likhitha58/codesentinel-ai

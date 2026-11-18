@@ -1,10 +1,10 @@
-# AI Development Log — CodeSentinel AI
+﻿# AI Development Log — CodeSentinel AI
 
 ## Overview
 
 This document records the use of AI assistance during the development of CodeSentinel AI for the Mycrobo Hackathon.
 
-**AI assistant:** ChatGPT  
+**AI assistant:** ChatGPT
 **Development period:** 17–18 November 2026
 
 The log distinguishes AI-generated suggestions from implemented functionality and verified results.
@@ -13,7 +13,7 @@ The log distinguishes AI-generated suggestions from implemented functionality an
 
 ## Session 01 — Project Planning
 
-**Date:** 17 November 2026  
+**Date:** 17 November 2026
 **Objective:** Interpret the hackathon problem statement and select a solution.
 
 ### User Request
@@ -38,7 +38,7 @@ Initial project scope and development roadmap established.
 
 ## Session 02 — Environment Setup and Debugging
 
-**Date:** 17 November 2026  
+**Date:** 17 November 2026
 **Objective:** Prepare the backend development environment.
 
 ### AI Contribution
@@ -69,7 +69,7 @@ ChatGPT provided PowerShell instructions for creating a Python virtual environme
 
 ## Session 03 — Repository Intelligence Engine
 
-**Date:** 17 November 2026  
+**Date:** 17 November 2026
 **Objective:** Implement repository discovery.
 
 ### AI Contribution
@@ -102,7 +102,7 @@ Framework detection currently checks selected manifests at the repository root r
 
 ## Session 04 — Security Scanner Implementation
 
-**Date:** 17–18 November 2026  
+**Date:** 17–18 November 2026
 **Objective:** Implement initial static security checks.
 
 ### AI Contribution
@@ -152,7 +152,7 @@ Initial security scanner operational, with known limitations requiring further t
 
 ## Session 05 — Documentation and Version Control
 
-**Date:** 18 November 2026  
+**Date:** 18 November 2026
 **Objective:** Prepare project documentation and GitHub version control.
 
 ### AI Contribution
@@ -229,3 +229,155 @@ Phase 2 implementation and validation completed.
 - Implement the LangGraph agent.
 - Add AI-assisted finding analysis and prioritization.
 - Develop the API and frontend.
+
+
+---
+
+## Session 7 — Unified Audit Engine
+
+**Date:** 18 November 2026
+**Objective:** Integrate repository intelligence, security scanning, and code-quality analysis.
+
+### AI Contributions
+- Designed the unified audit service.
+- Generated orchestration code for the existing analysis modules.
+- Suggested a normalized finding structure.
+- Designed integration tests for report consistency and invalid repository paths.
+
+### Human Contributions
+- Created the service implementation.
+- Executed the integration tests.
+- Reviewed the consolidated JSON output.
+- Verified finding counts, categories, sources, and severity summaries.
+
+### Implementation
+Created `backend/app/services/audit_service.py`.
+
+The service:
+- Validates repository paths.
+- Runs all three analysis modules.
+- Combines security and code-quality findings.
+- Adds category and source metadata.
+- Calculates consolidated severity counts.
+- Produces a read-only audit report.
+
+### Verified Results
+- Unified audit integration tests: 5 passed.
+- Total tests at this milestone: 18 passed.
+- Seven known security indicators were preserved in the vulnerable test fixture.
+- Finding counts and severity summaries were consistent.
+
+### Outcome
+Phase 3 completed.
+
+---
+
+## Session 8 — JSON and Markdown Report Export
+
+**Date:** 18 November 2026
+**Objective:** Make audit results exportable and readable outside the Python application.
+
+### AI Contributions
+- Designed JSON and Markdown export functionality.
+- Generated report formatting and serialization logic.
+- Suggested temporary-directory tests.
+- Helped integrate agent analysis into Markdown reports.
+- Diagnosed an incorrectly inserted code block that caused a Python syntax issue.
+
+### Human Contributions
+- Implemented the exporter.
+- Executed syntax checks and automated tests.
+- Generated actual JSON and Markdown reports.
+- Verified UTF-8 Markdown output.
+- Reviewed the exported findings and recommendations.
+
+### Implementation
+Created `backend/app/services/report_exporter.py`.
+
+Implemented:
+- JSON report serialization.
+- Markdown repository overview.
+- Severity summary tables.
+- Detailed finding descriptions and evidence.
+- Agent priorities and remediation recommendations.
+- Scanner notices and disclaimers.
+- Safe report filename generation.
+
+### Verified Results
+- Report exporter tests: 4 passed.
+- Total automated tests at this milestone: 22 passed.
+- JSON and Markdown files were generated successfully.
+- UTF-8 Markdown output was verified.
+
+### Outcome
+Phase 4 completed.
+
+---
+
+## Session 9 — LangGraph Audit Agent
+
+**Date:** 18 November 2026
+**Objective:** Add a structured agent workflow for prioritizing findings and generating remediation guidance.
+
+### AI Contributions
+- Designed the LangGraph workflow.
+- Suggested a typed agent state.
+- Generated deterministic prioritization logic.
+- Added rule-specific remediation guidance.
+- Designed recommendation grouping and executive-summary generation.
+- Prepared agent tests for priorities, duplicate rules, and report immutability.
+
+### Human Contributions
+- Created and executed the agent implementation.
+- Ran the automated test suite.
+- Inspected the agent's output.
+- Verified that the original audit report remained unchanged.
+- Integrated agent analysis into the Markdown exporter.
+
+### Implementation
+Created `backend/app/agents/audit_agent.py`.
+
+The workflow contains three nodes:
+
+1. `prioritize_findings`
+2. `generate_recommendations`
+3. `generate_executive_summary`
+
+The current implementation uses deterministic rules and predefined remediation guidance. It does not yet invoke a large language model.
+
+### Verified Results
+- Agent tests: 5 passed.
+- Agent-enhanced report export test: passed.
+- Total automated tests: 28 passed.
+- Executive summary generation: successful.
+- Priority assignment: successful.
+- Duplicate recommendation grouping: successful.
+- Original report immutability: verified.
+
+### Outcome
+Phase 5 completed.
+
+---
+
+## Current Project Status — 18 November 2026
+
+### Completed
+- Repository intelligence.
+- Heuristic security analysis.
+- Code-quality and coding-gap analysis.
+- Unified audit orchestration.
+- JSON and Markdown report generation.
+- LangGraph-based deterministic audit workflow.
+- Finding prioritization and remediation recommendations.
+- 28 passing automated tests.
+
+### Pending
+- FastAPI REST API.
+- React + Vite dashboard.
+- LLM-powered reasoning.
+- Advanced external scanning integrations.
+- End-to-end testing and final demonstration.
+
+### Transparency Note
+
+The term AI-assisted describes the development process and the LangGraph-based orchestration workflow. The current agent's prioritization and recommendations are deterministic and rule-based. LLM-powered reasoning has not yet been implemented.
