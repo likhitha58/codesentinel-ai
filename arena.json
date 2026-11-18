@@ -1,0 +1,9 @@
+{
+  "name": "CodeSentinel AI",
+  "version": "1.0.0",
+  "description": "An AI-assisted repository security and code-quality auditing platform that detects potential vulnerabilities, identifies code-quality issues, prioritizes findings, and generates structured audit reports.",
+  "track": "AI triage",
+  "repository": "https://github.com/likhitha58/codesentinel-ai",
+  "demo": "https://likhitha58.github.io/codesentinel-ai/",
+  "read_only": true
+}
