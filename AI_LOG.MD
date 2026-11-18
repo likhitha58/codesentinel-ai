@@ -359,7 +359,64 @@ Phase 5 completed.
 
 ---
 
-## Current Project Status — 18 November 2026
+## Session 10 - FastAPI Backend and API Hardening
+
+**Date:** 18 November 2026
+
+### Objective
+Expose the unified repository audit workflow through a REST API and add basic request and resource protections.
+
+### AI Contributions
+- Guided the creation of the FastAPI application and API router.
+- Designed repository path validation.
+- Suggested file-count and total-repository-size limits.
+- Added controlled exception handling and server-side logging.
+- Designed API regression tests.
+
+### Human Contributions
+- Created the API application, routes, and test module.
+- Started the local Uvicorn server.
+- Verified the root, health, and Swagger documentation endpoints.
+- Submitted an audit request through Swagger UI.
+- Reviewed the returned repository findings and LangGraph analysis.
+- Executed the API and complete backend test suites.
+
+### Implementation
+Created:
+- `backend/app/main.py`
+- `backend/app/api/routes.py`
+- `backend/tests/test_api.py`
+
+Available endpoints:
+- `GET /`
+- `GET /health`
+- `POST /api/audit`
+
+Initial API safeguards:
+- Restrict repository paths to the configured scan directory.
+- Reject absolute paths and traversal attempts.
+- Check symbolic-link escapes during path resolution.
+- Limit repositories to 5,000 files and 100 MB.
+- Exclude generated directories and symbolic links during resource counting.
+- Log unexpected processing errors and return controlled HTTP 500 responses.
+
+### Verified Results
+- API tests: 10 passed.
+- Complete backend test suite: 38 passed.
+- Successful end-to-end repository audit through the API.
+- Invalid paths and missing repositories handled as expected.
+- File-count and repository-size limits verified.
+- Controlled error response verified.
+
+### Technical Clarification
+The API invokes the existing deterministic LangGraph workflow. LLM-powered reasoning has not yet been integrated.
+
+### Outcome
+Phase 6 - FastAPI backend - implemented and validated.
+
+---
+
+## Current Project Status - 18 November 2026
 
 ### Completed
 - Repository intelligence.
@@ -369,15 +426,17 @@ Phase 5 completed.
 - JSON and Markdown report generation.
 - LangGraph-based deterministic audit workflow.
 - Finding prioritization and remediation recommendations.
-- 28 passing automated tests.
+- FastAPI application and repository audit endpoint.
+- Repository path validation and initial resource limits.
+- Controlled API error handling.
+- **38 passing automated tests.**
 
 ### Pending
-- FastAPI REST API.
 - React + Vite dashboard.
 - LLM-powered reasoning.
 - Advanced external scanning integrations.
-- End-to-end testing and final demonstration.
+- Final end-to-end testing and demonstration.
+- Final GitHub review and Mycrobo Arena submission.
 
 ### Transparency Note
-
-The term AI-assisted describes the development process and the LangGraph-based orchestration workflow. The current agent's prioritization and recommendations are deterministic and rule-based. LLM-powered reasoning has not yet been implemented.
+The current LangGraph workflow is deterministic. It uses severity mappings and predefined remediation guidance rather than LLM-generated reasoning. The API exposes this existing workflow; it does not make the agent LLM-powered.

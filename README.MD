@@ -219,9 +219,41 @@ python -m app.scanners.security_scanner ..
 
 ### Run automated tests
 
+From the backend directory:
+
 ```powershell
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
+
+### Start the FastAPI server
+
+From the backend directory:
+
+```powershell
+python -m uvicorn app.main:app --reload
+```
+
+Open the interactive API documentation:
+
+`http://127.0.0.1:8000/docs`
+
+Available endpoints:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/` | Application information |
+| GET | `/health` | Health check |
+| POST | `/api/audit` | Audit a repository inside `backend/scan_targets/` |
+
+Example audit request:
+
+```json
+{
+  "repository": "demo-repo"
+}
+```
+
+The API returns repository metadata, normalized findings, severity summaries, and deterministic LangGraph analysis.
 
 ### Run a unified audit with the agent
 
@@ -241,28 +273,32 @@ Generated reports are stored in the root `reports/` directory.
 
 Latest verified automated test run:
 
-**28 tests passed.**
+**38 tests passed.**
 
 | Test area | Tests |
 |---|---:|
+| API | 10 |
 | Security scanner | 5 |
 | Code-quality scanner | 8 |
 | Unified audit service | 5 |
 | Report exporter | 5 |
 | LangGraph agent | 5 |
-| **Total** | **28** |
+| **Total** | **38** |
 
-The deliberately vulnerable fixture produced seven known security indicators:
+Additional API validation:
+- Root and health endpoints return successful responses.
+- Invalid request payloads are rejected.
+- Absolute paths and directory traversal are rejected.
+- Missing repositories return HTTP 404.
+- Repository file-count and total-size limits return HTTP 413.
+- Unexpected audit processing failures return a controlled HTTP 500 response.
+- A successful API request runs the unified audit and LangGraph workflow.
 
-- HIGH: 5
-- MEDIUM: 1
-- LOW: 1
+The deliberately vulnerable scanner fixture has previously produced seven known security indicators. A separate API demonstration repository produced six findings during end-to-end validation.
 
-The code-quality scanner produced zero findings in the fixture repository during the reported validation.
+JSON and Markdown report generation, including agent analysis, was verified.
 
-JSON and Markdown report generation, including agent analysis, was also verified.
-
-The fixture is used only as scanner input. Its intentionally vulnerable code must never be executed.
+The intentionally vulnerable fixture is scanner input only. Its source code must never be executed.
 
 ## 8. Limitations
 
@@ -273,8 +309,10 @@ The fixture is used only as scanner input. Its intentionally vulnerable code mus
 - Framework detection currently checks selected root-level manifests.
 - Missing-test detection relies on recognizable test naming conventions.
 - The current LangGraph agent uses deterministic rules, not an LLM.
-- FastAPI routes and the React dashboard are not yet implemented.
+- The API currently scans repositories placed inside the configured `backend/scan_targets/` directory.
+- API preflight limits are currently 5,000 files and 100 MB per repository.
 - Advanced tools such as Semgrep, Gitleaks, and OSV-Scanner are not yet integrated.
+- The React + Vite dashboard is not yet implemented.
 
 ## 9. Development Roadmap
 
@@ -289,22 +327,32 @@ The fixture is used only as scanner input. Its intentionally vulnerable code mus
 - [x] Implement LangGraph audit workflow.
 - [x] Add finding prioritization and remediation recommendations.
 - [x] Include agent analysis in Markdown reports.
-- [ ] Build FastAPI endpoints.
+- [x] Build FastAPI application and endpoints.
+- [x] Restrict API repository paths to the configured scan directory.
+- [x] Add repository file-count and total-size limits.
+- [x] Add API error handling and automated tests.
 - [ ] Build React + Vite dashboard.
 - [ ] Add LLM-powered reasoning.
 - [ ] Integrate advanced security analysis tools.
-- [ ] Perform end-to-end testing and prepare demonstration.
+- [ ] Perform final end-to-end testing and prepare demonstration.
 
 ## 10. Security Considerations
 
 CodeSentinel AI is designed to inspect repositories without executing their source code.
 
-Before exposing the service to external users, additional safeguards are required:
-- Restrict repository paths to approved directories.
-- Enforce file-size and resource limits.
-- Protect against path traversal and symbolic-link issues.
+Implemented API safeguards:
+- Restrict repository paths to the configured `backend/scan_targets/` directory.
+- Reject absolute paths and directory traversal.
+- Resolve paths to prevent symbolic-link escapes at repository selection.
+- Exclude symbolic links during resource-limit traversal.
+- Enforce a maximum of 5,000 files and 100 MB per repository.
+- Return controlled errors without exposing internal exception details in API responses.
+- Redact credential-like evidence in security findings.
+
+Further safeguards are required before production deployment:
 - Isolate any future external scanner execution.
-- Avoid exposing server filesystem paths.
+- Add authentication and authorization if the API is exposed to untrusted users.
+- Review resource limits and concurrency controls for deployment.
 - Never commit API keys, credentials, or real secrets.
 
 ## 11. AI Development Transparency

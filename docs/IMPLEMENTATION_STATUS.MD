@@ -63,38 +63,48 @@ Status: COMPLETE
 
 ## 2. Validation Summary
 
-Latest verified automated test run:
+Latest verified automated test run: **38 tests passed**.
 
 | Test Module | Passed |
 |---|---:|
+| API | 10 |
 | Security scanner | 5 |
 | Code-quality scanner | 8 |
 | Audit service | 5 |
 | Report exporter | 5 |
 | Audit agent | 5 |
-| **Total** | **28** |
+| **Total** | **38** |
 
-Additional checks:
-- Python compilation of the report exporter: successful.
-- Unified audit generation: successful.
-- JSON report generation: successful.
-- Markdown report generation: successful.
-- Agent-enhanced Markdown report: successful.
-- UTF-8 Markdown output: verified.
+Additional verified checks:
+- FastAPI application imports successfully.
+- Root, health, and API documentation endpoints return HTTP 200.
+- Successful repository audit through `POST /api/audit`.
+- Absolute paths and directory traversal rejected.
+- Missing repositories return HTTP 404.
+- File-count and total-size limits return HTTP 413.
+- Unexpected audit processing errors return controlled HTTP 500 responses.
+- Unified audit and LangGraph agent output returned successfully through the API.
+- JSON and Markdown report generation verified.
+- UTF-8 Markdown output verified.
 
-## 3. Pending Milestones
+## 3. Completed and Pending Milestones
 
-### Phase 6 — FastAPI Backend
-Status: NOT STARTED
+### Phase 6 - FastAPI Backend
+Status: COMPLETE
 
-- [ ] Create FastAPI application.
-- [ ] Add health endpoint.
-- [ ] Add repository audit endpoint.
-- [ ] Validate API request payloads.
-- [ ] Restrict repository paths.
-- [ ] Test API responses and error handling.
+- [x] Create FastAPI application.
+- [x] Add health endpoint.
+- [x] Add repository audit endpoint.
+- [x] Validate API request payloads.
+- [x] Restrict repository paths to the configured scan directory.
+- [x] Reject absolute paths and directory traversal.
+- [x] Add repository file-count and total-size limits.
+- [x] Exclude generated directories and symbolic links during limit checks.
+- [x] Add controlled error handling and server-side exception logging.
+- [x] Add API regression tests.
+- [x] Verify successful end-to-end API audit.
 
-### Phase 7 — React Dashboard
+### Phase 7 - React Dashboard
 Status: NOT STARTED
 
 - [ ] Initialize React + Vite frontend.
@@ -105,7 +115,7 @@ Status: NOT STARTED
 - [ ] Display findings and recommendations.
 - [ ] Add report download functionality.
 
-### Phase 8 — AI and Advanced Analysis
+### Phase 8 - AI and Advanced Analysis
 Status: NOT STARTED
 
 - [ ] Integrate Google GenAI or another supported LLM.
@@ -114,10 +124,10 @@ Status: NOT STARTED
 - [ ] Evaluate advanced static-analysis tools.
 - [ ] Improve language and framework coverage.
 
-### Phase 9 — Final Validation and Submission
+### Phase 9 - Final Validation and Submission
 Status: PENDING
 
-- [ ] End-to-end testing.
+- [ ] End-to-end testing of the complete user experience.
 - [ ] Demo repository and walkthrough.
 - [ ] Final documentation review.
 - [ ] GitHub repository review.
@@ -130,8 +140,10 @@ Status: PENDING
 3. Framework detection is limited to selected root-level manifests.
 4. Test-file discovery relies on recognizable naming conventions.
 5. LangGraph prioritization and recommendations are deterministic, not LLM-generated.
-6. API and frontend layers are not yet implemented.
-7. No external security-scanning engines are integrated.
+6. The API currently scans repositories inside the configured scan directory.
+7. The API has initial file-count and total-size limits; production resource and concurrency controls still require review.
+8. No external security-scanning engines are integrated.
+9. The React frontend is not yet implemented.
 
 ## 5. Development Policy
 
