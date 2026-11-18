@@ -1,5 +1,6 @@
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
 
@@ -11,6 +12,17 @@ app = FastAPI(
         "code quality, and coding-gap auditing platform."
     ),
     version="1.0.0",
+)
+
+# Allow frontend dev server and production origins.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # Register repository audit endpoints.

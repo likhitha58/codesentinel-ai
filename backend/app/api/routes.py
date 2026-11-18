@@ -1,13 +1,17 @@
 
+import json
 import logging
 import os
+import re
 import stat
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.services.audit_service import build_audit_report
+from app.services.report_exporter import generate_markdown_report
 from app.agents.audit_agent import run_audit_agent
 
 
@@ -209,3 +213,97 @@ def audit_repository(request: AuditRequest):
             status_code=500,
             detail="The repository audit failed due to an internal processing error.",
         )
+
+
+def _safe_export_filename(value):
+    """Convert a repository name into a safe filename component."""
+    cleaned = re.sub(r"[^a-zA-Z0-9_-]+", "_", str(value))
+    return cleaned.strip("_") or "repository"
+
+
+def _run_full_audit(repository: str) -> dict:
+    """Resolve path, validate limits, run audit and agent analysis."""
+    repository_path = resolve_repository_path(repository)
+    validate_repository_limits(repository_path)
+    audit_report = build_audit_report(str(repository_path))
+    return run_audit_agent(audit_report)
+
+
+@router.post(
+    "/audit/export/json",
+    summary="Export audit report as JSON",
+    response_description="Downloadable JSON audit report.",
+)
+def export_json_report(request: AuditRequest):
+    """
+    Run a full repository audit and return the enhanced report
+    as a downloadable JSON file.
+    """
+    try:
+        enhanced_report = _run_full_audit(request.repository)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception(
+            "Audit export failed for repository: %s",
+            request.repository,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="The repository audit failed due to an internal processing error.",
+        )
+
+    repo_name = _safe_export_filename(
+        enhanced_report.get("repository", {}).get("repository", "repository")
+    )
+    filename = f"{repo_name}_audit_report.json"
+
+    content = json.dumps(enhanced_report, indent=2, ensure_ascii=False)
+
+    return Response(
+        content=content,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+
+
+@router.post(
+    "/audit/export/markdown",
+    summary="Export audit report as Markdown",
+    response_description="Downloadable Markdown audit report.",
+)
+def export_markdown_report(request: AuditRequest):
+    """
+    Run a full repository audit and return the enhanced report
+    as a downloadable Markdown file.
+    """
+    try:
+        enhanced_report = _run_full_audit(request.repository)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception(
+            "Audit export failed for repository: %s",
+            request.repository,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="The repository audit failed due to an internal processing error.",
+        )
+
+    repo_name = _safe_export_filename(
+        enhanced_report.get("repository", {}).get("repository", "repository")
+    )
+    filename = f"{repo_name}_audit_report.md"
+
+    content = generate_markdown_report(enhanced_report)
+
+    return Response(
+        content=content,
+        media_type="text/markdown",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
