@@ -33,7 +33,7 @@ RULES = [
         "name": "Possible SQL injection",
         "severity": "HIGH",
         "pattern": re.compile(
-            r"""(?i)(execute|executemany|query)\s*\(\s*["'][^"'\n]*(%s|\{\}|["']\s*\+|\$\{)"""
+            r"""(?is)\b(execute|executemany|query)\s*\(\s*["'][\s\S]{0,500}?(%s|\{\}|["']\s*\+|\$\{)"""
         ),
         "description": "SQL may be constructed using unsafe string interpolation or concatenation."
     },
@@ -116,13 +116,18 @@ def scan_file(file_path, root):
         return findings
 
     relative_path = file_path.relative_to(root).as_posix()
+    lines = content.splitlines()
 
-    for line_number, line in enumerate(content.splitlines(), start=1):
+    # Run ordinary security rules line by line.
+    for line_number, line in enumerate(lines, start=1):
 
         for rule in RULES:
 
-            if rule["pattern"].search(line):
+            # SEC002 is handled separately across the full file.
+            if rule["id"] == "SEC002":
+                continue
 
+            if rule["pattern"].search(line):
                 findings.append({
                     "rule_id": rule["id"],
                     "title": rule["name"],
@@ -134,6 +139,33 @@ def scan_file(file_path, root):
                     "confidence": "LOW",
                     "status": "NEEDS_REVIEW"
                 })
+
+    # Scan the complete file for SQL injection patterns,
+    # including patterns that span multiple lines.
+    sql_rule = next(
+        rule for rule in RULES
+        if rule["id"] == "SEC002"
+    )
+
+    for match in sql_rule["pattern"].finditer(content):
+
+        line_number = content.count(
+            "\n", 0, match.start()
+        ) + 1
+
+        evidence = " ".join(match.group(0).split())
+
+        findings.append({
+            "rule_id": sql_rule["id"],
+            "title": sql_rule["name"],
+            "severity": sql_rule["severity"],
+            "file": relative_path,
+            "line": line_number,
+            "description": sql_rule["description"],
+            "evidence": redact_evidence(evidence),
+            "confidence": "LOW",
+            "status": "NEEDS_REVIEW"
+        })
 
     return findings
 
